@@ -17,5 +17,5 @@ criterion = { version = "0.3.4",  features = [ "html_reports" ]}
 teloxide = "0.3"
 
 [[bench]]
-name = "bitshift_bench"
+name = "pointoperations"
 harness = false
