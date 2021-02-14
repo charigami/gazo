@@ -76,7 +76,7 @@ pub fn pack_u8(r: u8, g: u8, b: u8, a: u8) -> u32 {
     px
 }
 
-/// Deconstructs R,G,B,A h8 values from a single u32 value
+/// Deconstructs R,G,B,A u8 values from a single u32 value
 #[allow(dead_code)]
 #[inline(always)]
 pub fn unpack_u8(px: u32) -> (u8, u8, u8, u8) {
