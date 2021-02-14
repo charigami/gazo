@@ -1,0 +1,21 @@
+[package]
+name = "gazo"
+version = "0.1.0"
+authors = ["krevativ"]
+edition = "2018"
+
+[lib]
+name = "gazo"
+path = "src/lib.rs"
+
+[dependencies]
+minifb = "0.19.2"
+png = "0.16.8"
+
+[dev-dependencies]
+criterion = { version = "0.3.4",  features = [ "html_reports" ]}
+teloxide = "0.3"
+
+[[bench]]
+name = "bitshift_bench"
+harness = false
