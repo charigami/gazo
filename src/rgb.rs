@@ -121,6 +121,10 @@ impl ImgRGBA {
     pub fn get_px(&self, x: usize, y: usize) -> u32 {
         self.data[x * self.w + y * self.h]
     }
+
+    pub fn get_px_unpacked_u32(&self, x: usize, y: usize) -> (u32, u32, u32, u32) {
+        unpack_u32(self.data[x * self.w + y * self.h])
+    }
 }
 
 impl PointOperations for ImgRGBA {
@@ -160,7 +164,7 @@ mod tests {
 
         img.grayscale();
 
-        let px = unpack_u32(img.get_px(0, 0));
+        let px = img.get_px_unpacked_u32(0, 0);
 
         assert_eq!(px, (20, 20, 20, 0));
     }
@@ -171,7 +175,7 @@ mod tests {
 
         img.invert();
 
-        let px = unpack_u32(img.get_px(0, 0));
+        let px = img.get_px_unpacked_u32(0, 0);
 
         assert_eq!(px, (0, 0, 0, 0));
     }
@@ -182,8 +186,8 @@ mod tests {
 
         img.trashold(100);
 
-        let px1 = unpack_u32(img.get_px(0, 0));
-        let px2 = unpack_u32(img.get_px(1, 0));
+        let px1 = img.get_px_unpacked_u32(0, 0);
+        let px2 = img.get_px_unpacked_u32(1, 0);
 
         assert_eq!(px1, (0, 0, 0, 0));
         assert_eq!(px2, (255, 255, 255, 0));
