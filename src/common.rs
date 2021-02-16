@@ -87,6 +87,17 @@ pub fn unpack_u8(px: u32) -> (u8, u8, u8, u8) {
     (r, g, b, a)
 }
 
+/// Deconstructs R,G,B,A usize values from a single u32 value
+#[allow(dead_code)]
+#[inline(always)]
+pub fn unpack_usize(px: u32) -> (usize, usize, usize, usize) {
+    let r = (px >> 24) as usize;
+    let g = (px >> 16 & 0xFF) as usize;
+    let b = (px >> 8 & 0x0FF) as usize;
+    let a = (px >> 0 & 0x00FF) as usize;
+    (r, g, b, a)
+}
+
 /// Converts a single u32 value in RGBA format into a single u32 value in ARGB format
 #[allow(dead_code)]
 #[inline(always)]

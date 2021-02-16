@@ -5,7 +5,8 @@ fn main() {
 
     img.invert();
 
+    let (width, height) = img.dimensions();
     let framebuffer = img.to_argb_framebuffer();
 
-    display(&framebuffer, img.width as usize, img.height as usize);
+    display(&framebuffer, width as usize, height as usize);
 }

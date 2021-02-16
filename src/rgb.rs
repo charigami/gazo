@@ -1,20 +1,24 @@
 use std::fs::File;
 use std::path::Path;
 
-use crate::common::{self, pack_u32, pack_u8, rgba_to_argb, unpack_u32, PointOperations};
+use crate::{
+    common, pack_u32, pack_u8, rgba_to_argb, unpack_u32, unpack_usize, Histogram,
+    PointOperations,
+};
 
-/// Represents an RGBA image where each color channel is packed into a single u32 value
+/// Represents a image in RGBA color format, where all channels are contained in a single u32 value
 #[derive(Debug, Clone)]
 pub struct ImgRGBA {
     data: Vec<u32>,
     /// Image width
-    pub width: u32,
+    width: u32,
     /// Image height
-    pub height: u32,
+    height: u32,
     /// Image width off by one
     w: usize,
     /// Image height off by one
     h: usize,
+    /// Size of the data vector
     len: usize,
 }
 
@@ -34,7 +38,7 @@ impl ImgRGBA {
                 let mut data: Vec<u32> = Vec::with_capacity(data_len / 3);
 
                 for px in img_data.chunks(3) {
-                    let px = pack_u8(px[0], px[1], px[2], 0u8);
+                    let px = pack_u8(px[0], px[1], px[2], 255u8);
                     data.push(px);
                 }
 
@@ -55,7 +59,7 @@ impl ImgRGBA {
 
         let len = data.len();
 
-        Ok(ImgRGBA {
+        Ok(Self {
             data,
             len,
             width: info.width,
@@ -79,7 +83,7 @@ impl ImgRGBA {
                 let mut data: Vec<u32> = Vec::with_capacity(data_len / 3);
 
                 for px in bytes.chunks(3) {
-                    let px = pack_u8(px[0], px[1], px[2], 0u8);
+                    let px = pack_u8(px[0], px[1], px[2], 255u8);
                     data.push(px);
                 }
 
@@ -99,7 +103,7 @@ impl ImgRGBA {
 
         let len = data.len();
 
-        ImgRGBA {
+        Self {
             data,
             len,
             width,
@@ -125,6 +129,29 @@ impl ImgRGBA {
     pub fn get_px_unpacked_u32(&self, x: usize, y: usize) -> (u32, u32, u32, u32) {
         unpack_u32(self.data[x * self.w + y * self.h])
     }
+
+    pub fn dimensions(&self) -> (u32, u32) {
+        (self.width, self.height)
+    }
+
+    pub fn histogram(&self) -> (Histogram, Histogram, Histogram) {
+        let mut r_data: [u32; 256] = [0; 256];
+        let mut g_data: [u32; 256] = [0; 256];
+        let mut b_data: [u32; 256] = [0; 256];
+
+        &self.data.iter().for_each(|px| {
+            let (r, g, b, _) = unpack_usize(*px);
+            r_data[r] += 1;
+            g_data[g] += 1;
+            b_data[b] += 1;
+        });
+
+        (
+            Histogram::from(r_data),
+            Histogram::from(g_data),
+            Histogram::from(b_data),
+        )
+    }
 }
 
 impl PointOperations for ImgRGBA {
@@ -139,16 +166,16 @@ impl PointOperations for ImgRGBA {
     fn invert(&mut self) {
         self.data.iter_mut().for_each(|px| {
             let (r, g, b, a) = unpack_u32(*px);
-            *px = pack_u32(255 - r, 255 - g, 255 - b, a);
+            *px = pack_u32(255u32 - r, 255u32 - g, 255u32 - b, a);
         })
     }
 
     fn trashold(&mut self, limit: u32) {
         self.data.iter_mut().for_each(|px| {
             let (mut r, mut g, mut b, a) = unpack_u32(*px);
-            r = if r > limit { 255 } else { 0 };
-            g = if g > limit { 255 } else { 0 };
-            b = if b > limit { 255 } else { 0 };
+            r = if r > limit { 255u32 } else { 0u32 };
+            g = if g > limit { 255u32 } else { 0u32 };
+            b = if b > limit { 255u32 } else { 0u32 };
             *px = pack_u32(r, g, b, a);
         })
     }
@@ -166,7 +193,7 @@ mod tests {
 
         let px = img.get_px_unpacked_u32(0, 0);
 
-        assert_eq!(px, (20, 20, 20, 0));
+        assert_eq!(px, (20, 20, 20, 255));
     }
 
     #[test]
@@ -177,19 +204,20 @@ mod tests {
 
         let px = img.get_px_unpacked_u32(0, 0);
 
-        assert_eq!(px, (0, 0, 0, 0));
+        assert_eq!(px, (0, 0, 0, 255));
     }
 
     #[test]
     fn test_trashold() {
-        let mut img = ImgRGBA::from_bytes(&[100, 100, 100, 200, 200, 200], crate::ColorType::RGB, 2, 1);
+        let mut img =
+            ImgRGBA::from_bytes(&[100, 100, 100, 200, 200, 200], crate::ColorType::RGB, 2, 1);
 
         img.trashold(100);
 
         let px1 = img.get_px_unpacked_u32(0, 0);
         let px2 = img.get_px_unpacked_u32(1, 0);
 
-        assert_eq!(px1, (0, 0, 0, 0));
-        assert_eq!(px2, (255, 255, 255, 0));
+        assert_eq!(px1, (0, 0, 0, 255));
+        assert_eq!(px2, (255, 255, 255, 255));
     }
 }
